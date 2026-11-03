@@ -1,4 +1,4 @@
-# MirSFlr infrastructure status
+# Mirhollio (MirSFlr) infrastructure status
 
 Automated public checks for [Mirhollio Core](https://www.mirhollio.com) (formerly
 MirSFlr), an independent Flare validator and FTSO provider.
