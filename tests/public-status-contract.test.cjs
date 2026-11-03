@@ -17,7 +17,26 @@ const statusPath = "api/infra-health/status.json";
 const baselineCommit = "f04cb3a375a0d8b4ba87f5de7b929520798e51b1";
 const git = args => execFileSync("git", args, { cwd: root, encoding: "utf8", maxBuffer: 8 * 1024 * 1024 });
 const workflow = fs.readFileSync(path.join(root, workflowPath), "utf8");
-const baseline = git(["show", `${baselineCommit}:${workflowPath}`]);
+// The baseline is the contract lock: seven tests compare this workflow's text
+// and published payload against the workflow at that commit, which is what
+// catches an unintended change to the public contract. The MirSFlr ->
+// Mirhollio rename is an intended one, so it is mapped onto the baseline
+// instead of moving the baseline forward - that way the comparisons still
+// prove that nothing *else* changed, and the structural comparison against a
+// pre-safety-block revision keeps working.
+const renameToMirhollio = text => text
+  .split("MirkoS85/mirsflr-status").join("MirkoS85/mirhollio-status")
+  .split("mirkos85.github.io/mirsflr-status").join("mirkos85.github.io/mirhollio-status")
+  .split("mirsflr-infra-health/v1").join("mirhollio-infra-health/v1")
+  .split("mirsflr-infra-health/1.0").join("mirhollio-infra-health/1.0")
+  // The watch feed keeps its own schema name; the check only became tolerant
+  // of either prefix, which is behaviour-identical for every input here.
+  .split('if (data.schema !== "mirsflr-watch-status/v1") {')
+  .join('if (!/^(?:mirhollio|mirsflr)-watch-status\\/v1$/.test(data.schema)) {')
+  .split("/^mirsflr-watch-status\\/v\\d{1,6}$/")
+  .join("/^(?:mirhollio|mirsflr)-watch-status\\/v\\d{1,6}$/")
+  .split("MirSFlr").join("Mirhollio");
+const baseline = renameToMirhollio(git(["show", `${baselineCommit}:${workflowPath}`]));
 const fixture = JSON.parse(fs.readFileSync(path.join(root, statusPath), "utf8"));
 const clone = value => structuredClone(value);
 const watchIndex = fixture.checks.findIndex(check => check.id === "watch-feed");
@@ -87,7 +106,7 @@ function createOfflineHarness(options = {}) {
         r.statusText = options.httpStatusText || "Service Unavailable";
         return r;
       }
-      return response(options.website === undefined ? "MirSFlr" : options.website);
+      return response(options.website === undefined ? "Mirhollio" : options.website);
     }
     if (url === "https://flare-api.flare.network/ext/bc/P") {
       if (options.rpcError) throw new TypeError("fetch failed");
@@ -474,7 +493,7 @@ test("approved current URLs remain byte-identical; unexpected URL values fail cl
   validateUrls(fixture);
   assert.equal(JSON.stringify(fixture), before);
   const legacyPages = clone(fixture);
-  legacyPages.monitor.pagesUrl = "https://mirkos85.github.io/mirsflr-status/api/infra-health/status.json";
+  legacyPages.monitor.pagesUrl = "https://mirkos85.github.io/mirhollio-status/api/infra-health/status.json";
   validateUrls(legacyPages);
   const canary = "url-secret-canary";
   for (const url of ["http://127.0.0.1/admin", "https://internal.invalid/admin", `https://user:${canary}@example.invalid/`, `https://www.mirhollio.com/?token=${canary}`]) {

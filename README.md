@@ -1,7 +1,6 @@
-# Mirhollio (MirSFlr) infrastructure status
+# Mirhollio infrastructure status
 
-Automated public checks for [Mirhollio Core](https://www.mirhollio.com) (formerly
-MirSFlr), an independent Flare validator and FTSO provider.
+Automated public checks for [Mirhollio Core](https://www.mirhollio.com) (formerly MirSFlr), an independent Flare validator and FTSO provider.
 
 One workflow, `Infra Health CI`, runs every 15 minutes and publishes what it
 found to [`api/infra-health/status.json`](api/infra-health/status.json).
@@ -27,7 +26,7 @@ public repository names no operator endpoint.
 ## Reading the result
 
 ```
-https://raw.githubusercontent.com/MirkoS85/mirsflr-status/master/api/infra-health/status.json
+https://raw.githubusercontent.com/MirkoS85/mirhollio-status/master/api/infra-health/status.json
 ```
 
 The payload carries an `overall` verdict, a one-line `summary`, and a `checks`

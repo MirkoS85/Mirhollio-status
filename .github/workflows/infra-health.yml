@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Check MirSFlr critical endpoints
+      - name: Check Mirhollio critical endpoints
         shell: bash
         env:
           # publishStatus() needs this; without it the run checks everything,
@@ -113,9 +113,9 @@ jobs:
           }
           const publicCheckUrls = new Map(Object.values(CHECKS).map(check => [check.id, check.url]));
           const publicMonitorUrls = {
-            rawUrl: "https://raw.githubusercontent.com/MirkoS85/mirsflr-status/master/api/infra-health/status.json",
-            pagesUrl: "https://mirkos85.github.io/mirsflr-status/api/infra-health/status.json",
-            workflow: "https://github.com/MirkoS85/mirsflr-status/actions/workflows/infra-health.yml"
+            rawUrl: "https://raw.githubusercontent.com/MirkoS85/mirhollio-status/master/api/infra-health/status.json",
+            pagesUrl: "https://mirkos85.github.io/mirhollio-status/api/infra-health/status.json",
+            workflow: "https://github.com/MirkoS85/mirhollio-status/actions/workflows/infra-health.yml"
           };
           function assertPublicCheckUrl(check) {
             if (!publicCheckUrls.has(check.id) || check.url !== publicCheckUrls.get(check.id)) {
@@ -150,7 +150,7 @@ jobs:
                 signal: controller.signal,
                 redirect: "follow",
                 ...init,
-                headers: { "User-Agent": "mirsflr-infra-health/1.0", ...(init.headers || {}) }
+                headers: { "User-Agent": "mirhollio-infra-health/1.0", ...(init.headers || {}) }
               });
               const text = await response.text();
               if (!response.ok) {
@@ -208,10 +208,10 @@ jobs:
           async function checkWebsite() {
             try {
               const { text } = await withRetries(() => fetchWithTimeout(CHECKS.website.url));
-              if (!text.includes("MirSFlr")) {
-                return addCheck(CHECKS.website, "down", "Website loaded, but expected MirSFlr text was not found.");
+              if (!text.includes("Mirhollio")) {
+                return addCheck(CHECKS.website, "down", "Website loaded, but expected Mirhollio text was not found.");
               }
-              return addCheck(CHECKS.website, "ok", "Website is reachable and contains the expected MirSFlr marker.");
+              return addCheck(CHECKS.website, "ok", "Website is reachable and contains the expected Mirhollio marker.");
             } catch (error) {
               return addCheck(CHECKS.website, "down", `Website request failed: ${publicErrorText(error)}`);
             }
@@ -278,8 +278,8 @@ jobs:
                 ? (publicTimestamp(data.generatedAt) ? data.generatedAt : new Date(generatedMs).toISOString())
                 : null;
 
-              if (data.schema !== "mirsflr-watch-status/v1") {
-                errors.push(`unexpected schema ${publicInputDescription(data.schema, value => /^mirsflr-watch-status\/v\d{1,6}$/.test(value))}`);
+              if (!/^(?:mirhollio|mirsflr)-watch-status\/v1$/.test(data.schema)) {
+                errors.push(`unexpected schema ${publicInputDescription(data.schema, value => /^(?:mirhollio|mirsflr)-watch-status\/v\d{1,6}$/.test(value))}`);
               }
               if (!Number.isFinite(ageMinutes)) {
                 errors.push("generatedAt is missing or invalid");
@@ -331,13 +331,13 @@ jobs:
           function statusSummary(overall) {
             if (overall === "down") {
               const failed = checks.filter(item => item.kind === "critical" && item.status === "down");
-              return `${failed.length} critical MirSFlr check${failed.length === 1 ? "" : "s"} failed.`;
+              return `${failed.length} critical Mirhollio check${failed.length === 1 ? "" : "s"} failed.`;
             }
             if (overall === "warn") {
               const warned = checks.filter(item => item.status === "warn");
-              return `${warned.length} MirSFlr check${warned.length === 1 ? " needs" : "s need"} attention; critical infra is still up.`;
+              return `${warned.length} Mirhollio check${warned.length === 1 ? " needs" : "s need"} attention; critical infra is still up.`;
             }
-            return "All critical MirSFlr infra checks passed.";
+            return "All critical Mirhollio infra checks passed.";
           }
 
           // BEGIN PUBLIC STATUS CONTRACT
@@ -497,7 +497,7 @@ jobs:
             checks.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
             const overall = overallStatus();
             const payload = {
-              schema: "mirsflr-infra-health/v1",
+              schema: "mirhollio-infra-health/v1",
               generatedAt: new Date().toISOString(),
               overall,
               summary: statusSummary(overall),
@@ -505,8 +505,8 @@ jobs:
                 name: "Infra Health CI",
                 intervalMinutes: 15,
                 statusPath: STATUS_PATH,
-                rawUrl: "https://raw.githubusercontent.com/MirkoS85/mirsflr-status/master/api/infra-health/status.json",
-                workflow: "https://github.com/MirkoS85/mirsflr-status/actions/workflows/infra-health.yml"
+                rawUrl: "https://raw.githubusercontent.com/MirkoS85/mirhollio-status/master/api/infra-health/status.json",
+                workflow: "https://github.com/MirkoS85/mirhollio-status/actions/workflows/infra-health.yml"
               },
               checks
             };
